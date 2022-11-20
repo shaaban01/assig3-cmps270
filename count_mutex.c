@@ -6,6 +6,8 @@
 #include <pthread.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <time.h>
+
 
 #define NTHREADS 4
 #define ARRAYSIZE 16
@@ -15,6 +17,10 @@ int count = 0;
 int a[ARRAYSIZE];
 pthread_mutex_t count_mutex;
 
+
+// a function to count the 
+// requires: nothing
+// effect:  return k such that the array contains k Ones
 void *do_work(void *tid)
 {
     int i, start, *mytid, end;
@@ -39,6 +45,8 @@ void *do_work(void *tid)
 
 int main(int argc, char *argv[])
 {
+    clock_t t;
+    t = clock();
 
     for (int i = 0; i < ARRAYSIZE; i++)
     {
@@ -64,7 +72,9 @@ int main(int argc, char *argv[])
         pthread_join(threads[i], NULL);
     }
     printf("\n[MAIN] Done. count= %d", count);
-
+        t = clock() - t;
+    printf("No. of clicks %ld clicks (%f seconds).\n",
+           t, ((float)t) / CLOCKS_PER_SEC);
     count = 0;
     /* for (i=0;i<ARRAYSIZE;i++){
      a[i] = i*1.0;

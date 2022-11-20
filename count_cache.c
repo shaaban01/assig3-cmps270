@@ -1,68 +1,79 @@
 /******************************************************************************
-* compile with gcc -pthread *.c -o loops
-* test with valgrind --tool=helgrind ./lops
-*s
-******************************************************************************/
+ * compile with gcc -pthread *.c -o loops
+ * test with valgrind --tool=helgrind ./lops
+ *s
+ ******************************************************************************/
 #include <pthread.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <time.h>
 
-#define NTHREADS    16
-#define ARRAYSIZE   320000000
-#define ITERATIONS   ARRAYSIZE / NTHREADS
+#define NTHREADS 16
+#define ARRAYSIZE 320000000
+#define ITERATIONS ARRAYSIZE / NTHREADS
 #define CACHE_SIZE 320
 
 int count = 0;
 int a[ARRAYSIZE];
 
-typedef struct {
-   int myCount;
-   char buffer[CACHE_SIZE-sizeof(int)];
+typedef struct
+{
+    int myCount;
+    char buffer[CACHE_SIZE - sizeof(int)];
 } Data;
 
-void *do_work(void *tid) 
+// a function to count the
+// requires: nothing
+// effect:  return k such that the array contains k Ones
+void *do_work(void *tid)
 {
-  int i, start, *mytid, end;
-  Data data={0};
+    int i, start, *mytid, end;
+    Data data = {0};
 
-  mytid = (int *) tid;
-  start = (*mytid * ITERATIONS);
-  end = start + ITERATIONS;
-  printf ("\n[Thread %5d] Doing iterations \t%10d to \t %10d",*mytid,start,end-1); 
-  for (i=start; i < end ; i++) {
-        if(a[i] == 1) data.myCount++;
+    mytid = (int *)tid;
+    start = (*mytid * ITERATIONS);
+    end = start + ITERATIONS;
+    printf("\n[Thread %5d] Doing iterations \t%10d to \t %10d", *mytid, start, end - 1);
+    for (i = start; i < end; i++)
+    {
+        if (a[i] == 1)
+            data.myCount++;
     }
     count += data.myCount;
-  pthread_exit(NULL);
+    pthread_exit(NULL);
 }
-
 
 int main(int argc, char *argv[])
 {
-    
-  for (int i = 0; i < ARRAYSIZE; i++)
-  {
-    a[i]=1;
-  }
-  
-  int i, start, tids[NTHREADS];
-  pthread_t threads[NTHREADS];
-  pthread_attr_t attr;
-
-  pthread_attr_init(&attr);
-  pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_JOINABLE);
-  for (i=0; i<NTHREADS; i++) {
-    tids[i] = i;
-    pthread_create(&threads[i], &attr, do_work, (void *) &tids[i]);
+    clock_t t;
+    t = clock();
+    for (int i = 0; i < ARRAYSIZE; i++)
+    {
+        a[i] = 1;
     }
 
-  for (i=0; i<NTHREADS; i++) {
-    pthread_join(threads[i], NULL);
-  }
-  printf ("\n[MAIN] Done. count= %d", count);
+    int i, start, tids[NTHREADS];
+    pthread_t threads[NTHREADS];
+    pthread_attr_t attr;
 
-  count=0;
-  /* Clean up and exit */
-  pthread_attr_destroy(&attr);
-  pthread_exit (NULL);
+    pthread_attr_init(&attr);
+    pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_JOINABLE);
+    for (i = 0; i < NTHREADS; i++)
+    {
+        tids[i] = i;
+        pthread_create(&threads[i], &attr, do_work, (void *)&tids[i]);
+    }
+
+    for (i = 0; i < NTHREADS; i++)
+    {
+        pthread_join(threads[i], NULL);
+    }
+    printf("\n[MAIN] Done. count= %d", count);
+    t = clock() - t;
+    printf("No. of clicks %ld clicks (%f seconds).\n",
+           t, ((float)t) / CLOCKS_PER_SEC);
+    count = 0;
+    /* Clean up and exit */
+    pthread_attr_destroy(&attr);
+    pthread_exit(NULL);
 }

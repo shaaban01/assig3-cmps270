@@ -7,8 +7,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#define NTHREADS 32
-#define ARRAYSIZE 32000000
+#define NTHREADS 4
+#define ARRAYSIZE 16
 #define ITERATIONS ARRAYSIZE / NTHREADS
 
 int count = 0;

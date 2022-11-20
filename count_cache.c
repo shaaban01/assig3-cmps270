@@ -1,39 +1,45 @@
 /******************************************************************************
 * compile with gcc -pthread *.c -o loops
 * test with valgrind --tool=helgrind ./lops
-*
+*s
 ******************************************************************************/
 #include <pthread.h>
 #include <stdio.h>
 #include <stdlib.h>
 
-#define NTHREADS    32
-#define ARRAYSIZE   3200000
+#define NTHREADS    16
+#define ARRAYSIZE   320000000
 #define ITERATIONS   ARRAYSIZE / NTHREADS
+#define CACHE_SIZE 320
 
-int count=0;
+int count = 0;
 int a[ARRAYSIZE];
 
+typedef struct {
+   int myCount;
+   char buffer[CACHE_SIZE-sizeof(int)];
+} Data;
 
 void *do_work(void *tid) 
 {
   int i, start, *mytid, end;
-  int myCount=0;
+  Data data={0};
 
   mytid = (int *) tid;
   start = (*mytid * ITERATIONS);
   end = start + ITERATIONS;
   printf ("\n[Thread %5d] Doing iterations \t%10d to \t %10d",*mytid,start,end-1); 
   for (i=start; i < end ; i++) {
-    if(a[i] == 1) count++;
+        if(a[i] == 1) data.myCount++;
     }
+    count += data.myCount;
   pthread_exit(NULL);
 }
 
 
 int main(int argc, char *argv[])
 {
-
+    
   for (int i = 0; i < ARRAYSIZE; i++)
   {
     a[i]=1;
